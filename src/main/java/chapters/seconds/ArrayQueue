@@ -1,1 +1,157 @@
-# ArrayQueue
+package chapters.seconds;
+
+/**
+ *
+ * @author ale
+ */
+public class ArrayQueueLab<T> implements QueueInterface<T> {
+
+    private T[] queue;              // circular array (one unused slot)
+    private int frontIndex;
+    private int backIndex;
+
+    private static final int DEFAULT_INITIAL_CAPACITY = 50;
+
+    public ArrayQueueLab() {
+        this(DEFAULT_INITIAL_CAPACITY);
+    }
+
+    public ArrayQueueLab(int initialCapacity) {
+        @SuppressWarnings("unchecked")
+        T[] tempQueue = (T[]) new Object[initialCapacity + 1];
+        queue = tempQueue;
+        frontIndex = 0;
+        backIndex = initialCapacity; // empty queue when backIndex is one behind frontIndex
+    }
+
+    // Problem 1, Part 1 
+    // Moves all items from anotherQueue into this queue (anotherQueue becomes empty)
+    @Override
+    public void splice(QueueInterface<T> anotherQueue) {
+        if (anotherQueue == null || anotherQueue == this) return;
+
+        while (!anotherQueue.isEmpty()) {
+            this.enqueue(anotherQueue.dequeue());
+        }
+    }
+
+    // Problem 1, Part 2 
+    @Override
+    public boolean enqueueNoDuplicate(T item) {
+        int index = frontIndex;
+
+        // scan all current elements from front to back (circularly)
+        while (index != (backIndex + 1) % queue.length) {
+            T current = queue[index];
+
+            if (item == null) {
+                if (current == null) return false;
+            } else {
+                if (item.equals(current)) return false;
+            }
+
+            index = (index + 1) % queue.length;
+        }
+
+        enqueue(item);
+        return true;
+    }
+
+    @Override
+    public void enqueue(T newEntry) {
+        ensureCapacity();
+        backIndex = (backIndex + 1) % queue.length;
+        queue[backIndex] = newEntry;
+    }
+
+    @Override
+    public T dequeue() {
+        T front = null;
+        if (!isEmpty()) {
+            front = queue[frontIndex];
+            queue[frontIndex] = null;
+            frontIndex = (frontIndex + 1) % queue.length;
+        }
+        return front;
+    }
+
+    @Override
+    public T getFront() {
+        if (isEmpty()) return null;
+        return queue[frontIndex];
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return frontIndex == (backIndex + 1) % queue.length;
+    }
+
+    // Optional (only if your QueueInterface includes it)
+    @Override
+    public void clear() {
+        while (!isEmpty()) {
+            dequeue();
+        }
+    }
+
+    //- Capacity Helper 
+    private void ensureCapacity() {
+        // full when advancing backIndex by 1 would hit frontIndex
+        if (frontIndex == (backIndex + 2) % queue.length) {
+            T[] oldQueue = queue;
+            int oldLength = oldQueue.length;
+
+            @SuppressWarnings("unchecked")
+            T[] newQueue = (T[]) new Object[oldLength * 2];
+
+            int newIndex = 0;
+            int oldIndex = frontIndex;
+
+            while (oldIndex != (backIndex + 1) % oldLength) {
+                newQueue[newIndex++] = oldQueue[oldIndex];
+                oldIndex = (oldIndex + 1) % oldLength;
+            }
+
+            queue = newQueue;
+            frontIndex = 0;
+            backIndex = newIndex - 1;
+        }
+    }
+
+    //  toString 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+
+        int index = frontIndex;
+        boolean first = true;
+
+        while (index != (backIndex + 1) % queue.length) {
+            if (!first) sb.append(", ");
+            sb.append(queue[index]);
+            first = false;
+            index = (index + 1) % queue.length;
+        }
+
+        sb.append("]");
+        return sb.toString();
+    }
+
+    // -------------------- Tests --------------------
+    public static void main(String[] args) {
+        ArrayQueueLab<Integer> q1 = new ArrayQueueLab<>();
+        ArrayQueueLab<Integer> q2 = new ArrayQueueLab<>();
+
+        q1.enqueue(1);
+        q1.enqueue(2);
+
+        q2.enqueue(3);
+        q2.enqueue(4);
+
+        q1.splice(q2);
+
+        System.out.println(q1); // [1, 2, 3, 4]
+        System.out.println(q2); // []
+    }
+}
