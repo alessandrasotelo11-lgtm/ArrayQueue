@@ -1,0 +1,24 @@
+package chapters.seconds;
+
+/**
+ *
+ * @author ale
+ */
+public interface QueueInterface<T> {
+
+    void enqueue(T newEntry);
+
+    T dequeue();
+
+    T getFront();
+
+    boolean isEmpty();
+
+    // Lab-specific methods
+    void splice(QueueInterface<T> anotherQueue);
+
+    boolean enqueueNoDuplicate(T item);
+
+    // Optional (include only if your instructor requires it)
+    void clear();
+}
